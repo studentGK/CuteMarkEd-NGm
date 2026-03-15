@@ -75,7 +75,7 @@ void CuteMarkdownHighlighter::highlightBlock(const QString &textBlock)
 
 void CuteMarkdownHighlighter::checkSpelling(const QString &textBlock)
 {
-    const QStringList wordList = textBlock.split(QRegExp("\\W+"), QString::SkipEmptyParts);
+    const QStringList wordList = textBlock.split(QRegularExpression(QStringLiteral("\\W+")), Qt::SkipEmptyParts);
     int index = 0;
     for (const QString &word : wordList) {
         index = textBlock.indexOf(word, index);

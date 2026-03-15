@@ -176,7 +176,7 @@ bool FindReplaceWidget::find(const QString &searchString, QTextDocument::FindFla
 
 bool FindReplaceWidget::findUsingRegExp(const QString &pattern, QTextDocument::FindFlags findOptions) const
 {
-    QRegExp rx(pattern, findCaseSensitively ? Qt::CaseSensitive : Qt::CaseInsensitive);
+    QRegularExpression rx(pattern, findCaseSensitively ? Qt::CaseSensitive : Qt::CaseInsensitive);
 
     QTextCursor search = textEditor->document()->find(rx, textEditor->textCursor(), findOptions);
     if (search.isNull())

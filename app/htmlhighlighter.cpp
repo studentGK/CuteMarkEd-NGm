@@ -74,16 +74,16 @@ HtmlHighlighter::HtmlHighlighter(QTextDocument *document) :
              << QStringLiteral("<del>") << QStringLiteral("</del>");
 
     for(const QString &keyword : keywords) {
-        rule.pattern = QRegExp(keyword);
+        rule.pattern = QRegularExpression(keyword);
         rule.format = &keywordFormat;
         highlightingRules.append(rule);
     }
 
-    rule.pattern = QRegExp(htmlTagRegExp.arg("img"));
+    rule.pattern = QRegularExpression(htmlTagRegExp.arg("img"));
     rule.format = &imageFormat;
     highlightingRules.append(rule);
 
-    rule.pattern = QRegExp(htmlTagRegExp.arg("a"));
+    rule.pattern = QRegularExpression(htmlTagRegExp.arg("a"));
     rule.format = &linkFormat;
     highlightingRules.append(rule);
 }
@@ -102,7 +102,7 @@ void HtmlHighlighter::highlightBlock(const QString &text)
 {
     if (enabled) {
         for (const HighlightingRule &rule : qAsConst(highlightingRules)) {
-            QRegExp expression(rule.pattern);
+            QRegularExpression expression(rule.pattern);
             int index = text.indexOf(expression);
             while (index >= 0) {
                 int length = expression.matchedLength();

@@ -33,7 +33,7 @@ protected:
 private:
     struct HighlightingRule
     {
-        QRegExp pattern;
+        QRegularExpression pattern;
         QTextCharFormat *format;
     };
     QList<HighlightingRule> highlightingRules;
