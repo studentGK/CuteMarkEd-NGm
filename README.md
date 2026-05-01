@@ -1,6 +1,21 @@
 ## CuteMarkEd NGm
 
-Ported CuteMarkEd NG to Qt6.  
+### DESCRIPTION
+
+Ported CuteMarkEd NG to Qt6.
+
+
+### DEPENDENCIES
+
+* \[Qt 6.10\]([http://qt-project.org](http://qt-project.org)) (LGPL v2.1)
+* \[mD4C\]([http://github.com/mity/md4c](http://github.com/mity/md4c)) (MIT License)
+* \[QMarkdownTextedit\]([https://github.com/pbek/qmarkdowntextedit](https://github.com/pbek/qmarkdowntextedit)) (MIT License)
+* \[Hunspell\]([https://github.com/hunspell/hunspell](https://github.com/hunspell/hunspell)) (LGPL/GPL/MPL tri-license)
+* \[mermaid.js\]([https://github.com/mermaid-js/mermaid](https://github.com/mermaid-js/mermaid)) (MIT License)
+
+### LINKS
+
+[https://github.com/Waqar144/CuteMarkEd-NG](https://github.com/Waqar144/CuteMarkEd-NG)  
 
 
 ## CuteMarkEd NG
@@ -55,9 +70,10 @@ We use [Transifex](https://www.transifex.com/projects/p/cutemarked) for the tran
 
 ### LINKS
 
-
+  
 [http://www.ohloh.net/p/CuteMarkEd](http://www.ohloh.net/p/CuteMarkEd)  
-[http://freecode.com/projects/cutemarked](http://freecode.com/projects/cutemarked)  
+[http://freecode.com/projects/cutemarked](http://freecode.com/projects/cutemarked)
+
 [http://qt-apps.org/content/show.php/CuteMarkEd?content=158801](http://qt-apps.org/content/show.php/CuteMarkEd?content=158801)  
 [http://www.heise.de/download/cutemarked-1191267.html](http://www.heise.de/download/cutemarked-1191267.html)  
 [http://www.softpedia.com/get/Programming/File-Editors/CuteMarkEd.shtml](http://www.softpedia.com/get/Programming/File-Editors/CuteMarkEd.shtml)
