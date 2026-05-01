@@ -123,37 +123,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>chooseFileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>ExportHtmlDialog</receiver>
-   <slot>chooseFileButtonClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>368</x>
-     <y>22</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>208</x>
-     <y>74</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>exportToLineEdit</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>ExportHtmlDialog</receiver>
-   <slot>exportToTextChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>189</x>
-     <y>21</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>203</x>
-     <y>37</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
 </ui>

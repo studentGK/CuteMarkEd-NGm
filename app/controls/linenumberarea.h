@@ -24,7 +24,7 @@ class MarkdownEditor;
 
 class LineNumberArea : public QWidget
 {
-    Q_OBJECT
+    // Q_OBJECT removed: no signals or slots defined, macro not required
 public:
     explicit LineNumberArea(MarkdownEditor *editor);
     

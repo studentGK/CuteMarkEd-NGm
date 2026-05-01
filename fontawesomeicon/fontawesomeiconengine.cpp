@@ -30,6 +30,7 @@
 #include <QPainter>
 #include <QPalette>
 #include <QPixmapCache>
+#include <QHash>
 
 int FontAwesomeIconEngine::fontId = -1;
 QString FontAwesomeIconEngine::fontName;

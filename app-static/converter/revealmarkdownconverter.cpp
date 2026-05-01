@@ -46,5 +46,5 @@ Template *RevealMarkdownConverter::templateRenderer() const
 
 MarkdownConverter::ConverterOptions RevealMarkdownConverter::supportedOptions() const
 {
-    return 0;
+    return {};
 }

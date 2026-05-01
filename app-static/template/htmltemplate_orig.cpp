@@ -4,19 +4,19 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- *
+ * 
  *     (1) Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
+ *     notice, this list of conditions and the following disclaimer. 
+ * 
  *     (2) Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
- *     distribution.
- *
+ *     distribution.  
+ *     
  *     (3) The name of the author may not be used to
  *     endorse or promote products derived from this software without
  *     specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,29 +35,16 @@
 #include <QRegularExpression>
 #include <QDebug>
 
-// Helper: read a QRC resource into a QString
-static QString readResource(const QString &path)
-{
-    QFile f(path);
-    if (f.open(QIODevice::ReadOnly | QIODevice::Text))
-        return QString::fromUtf8(f.readAll());
-    qWarning() << "HtmlTemplate: failed to read resource" << path;
-    return QString();
-}
-
 HtmlTemplate::HtmlTemplate()
 {
-    htmlTemplate = readResource(QStringLiteral(":/template.html"));
-
-    // highlight.js base script (style is theme-dependent, loaded lazily)
-    highlightJsInline = readResource(QStringLiteral(":/scripts/highlight.js/highlight.pack.js"));
-
-    // mermaid: .bin alias prevents Qt rcc V4 precompilation of ESNext syntax
-    mermaidJsInline = readResource(QStringLiteral(":/scripts/mermaid/mermaid.tiny.js"));
+    QFile f(QStringLiteral(":/template.html"));
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        htmlTemplate = f.readAll();
+    }
 }
 
 HtmlTemplate::HtmlTemplate(const QString &templateString) :
-    htmlTemplate(templateString)
+	htmlTemplate(templateString)
 {
 }
 
@@ -87,9 +74,9 @@ QString HtmlTemplate::renderAsHtml(const QString &header, const QString &body, T
     htmlHeader += header;
 
     QString htmlBody(body);
-    // Always convert language-mermaid code blocks to <div class="mermaid">
-    // when diagram support is enabled. mermaid v10+ only triggers on that class.
-    if (options.testFlag(Template::DiagramSupport)) {
+    // Mermaid and highlighting.js don't work nicely together
+    // So we need to replace the <code> section by a <div> section
+    if (options.testFlag(Template::CodeHighlighting) && options.testFlag(Template::DiagramSupport)) {
         convertDiagramCodeSectionToDiv(htmlBody);
     }
 
@@ -131,34 +118,17 @@ QString HtmlTemplate::buildHtmlHeader(RenderOptions options) const
         header += QLatin1String("<script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>\n");
     }
 
-    // add Highlight.js script to HTML header (inlined to avoid qrc:// blocking)
+    // add Highlight.js script to HTML header
     if (options.testFlag(Template::CodeHighlighting)) {
-        // CSS for the current theme — read inline each time (theme can change)
-        const QString cssSrc = readResource(
-            QStringLiteral(":/scripts/highlight.js/styles/%1.css").arg(codeHighlightingStyle()));
-        if (!cssSrc.isEmpty())
-            header += QStringLiteral("<style>%1</style>\n").arg(cssSrc);
-
-        if (!highlightJsInline.isEmpty())
-            header += QStringLiteral("<script>%1</script>\n").arg(highlightJsInline);
-
+        header += QStringLiteral("<link rel=\"stylesheet\" href=\"qrc:/scripts/highlight.js/styles/%1.css\">\n").arg(codeHighlightingStyle());
+        header += QLatin1String("<script src=\"qrc:/scripts/highlight.js/highlight.pack.js\"></script>\n");
         header += QLatin1String("<script>hljs.initHighlightingOnLoad();</script>\n");
     }
 
-    // add mermaid.js — loaded via qrc:// which works when baseUrl is qrc:/
+    // add mermaid.js script to HTML header
     if (options.testFlag(Template::DiagramSupport)) {
-        header += QLatin1String("<script src=\"qrc:/scripts/mermaid/mermaid.tiny.js\"></script>\n");
-        header += QLatin1String(
-            "<script>\n"
-            "mermaid.initialize({ startOnLoad: false, theme: 'default' });\n"
-            "function _runMermaid() { mermaid.run({ querySelector: '.mermaid' }); }\n"
-            "if (document.readyState === 'loading') {\n"
-            "    document.addEventListener('DOMContentLoaded', _runMermaid);\n"
-            "} else {\n"
-            "    setTimeout(_runMermaid, 0);\n"
-            "}\n"
-            "</script>\n"
-        );
+        header += QLatin1String("<link rel=\"stylesheet\" href=\"qrc:/scripts/mermaid/mermaid.css\">\n");
+        header += QLatin1String("<script src=\"qrc:/scripts/mermaid/mermaid.full.min.js\"></script>\n");
     }
 
     // add wavedrom.js script to HTML header
@@ -172,10 +142,7 @@ QString HtmlTemplate::buildHtmlHeader(RenderOptions options) const
 
 void HtmlTemplate::convertDiagramCodeSectionToDiv(QString &body) const
 {
-    // MD4C (CommonMark) prefixes fenced code block classes with "language-",
-    // so we match both "mermaid" and "language-mermaid".
-    // mermaid v10+ only recognizes class="mermaid", so we normalize to that.
-    static const QRegularExpression rx(QStringLiteral("<pre><code class=\"(?:language-)?mermaid\">(.*?)</code></pre>"),
+    static const QRegularExpression rx(QStringLiteral("<pre><code class=\"mermaid\">(.*?)</code></pre>"),
                                        QRegularExpression::DotMatchesEverythingOption);
     body.replace(rx, QStringLiteral("<div class=\"mermaid\">\n\\1</div>"));
 }

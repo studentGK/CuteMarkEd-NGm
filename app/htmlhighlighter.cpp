@@ -16,6 +16,9 @@
  */
 #include "htmlhighlighter.h"
 
+#include <utility>
+#include <QRegularExpressionMatch>
+
 HtmlHighlighter::HtmlHighlighter(QTextDocument *document) :
     QSyntaxHighlighter(document),
     enabled(false)
@@ -101,13 +104,14 @@ void HtmlHighlighter::setEnabled(bool enabled)
 void HtmlHighlighter::highlightBlock(const QString &text)
 {
     if (enabled) {
-        for (const HighlightingRule &rule : qAsConst(highlightingRules)) {
+        for (const HighlightingRule &rule : std::as_const(highlightingRules)) {
             QRegularExpression expression(rule.pattern);
-            int index = text.indexOf(expression);
-            while (index >= 0) {
-                int length = expression.matchedLength();
+            QRegularExpressionMatch match = expression.match(text);
+            while (match.hasMatch()) {
+                int index = match.capturedStart();
+                int length = match.capturedLength();
                 setFormat(index, length, *(rule.format));
-                index = text.indexOf(expression, index + length);
+                match = expression.match(text, index + length);
             }
         }
         setCurrentBlockState(0);

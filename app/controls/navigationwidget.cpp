@@ -63,7 +63,7 @@ void NavigationWidget::parse(QTextDocument *document) {
 
     setDocument(document);
 
-    QFuture<QVector<Node>> future = QtConcurrent::run(this, &NavigationWidget::parseDocument, document);
+    QFuture<QVector<Node>> future = QtConcurrent::run(&NavigationWidget::parseDocument, this, document);
     this->parseFutureWatcher->setFuture(future);
 }
 

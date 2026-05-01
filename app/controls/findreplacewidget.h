@@ -56,8 +56,8 @@ private slots:
 
 private:
     void setupFindOptionsMenu();
-    bool find(const QString &searchString, QTextDocument::FindFlags findOptions = 0) const;
-    bool findUsingRegExp(const QString &pattern, QTextDocument::FindFlags findOptions = 0) const;
+    bool find(const QString &searchString, QTextDocument::FindFlags findOptions = {}) const;
+    bool findUsingRegExp(const QString &pattern, QTextDocument::FindFlags findOptions = {}) const;
 
     Ui::FindReplaceWidget *ui;
     QPlainTextEdit *textEditor;

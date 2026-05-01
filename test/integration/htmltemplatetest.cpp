@@ -23,18 +23,28 @@
 
 static const QString HTML_TEMPLATE = QStringLiteral("<html><head><!--__HTML_HEADER__--></head><body><!--__HTML_CONTENT__--></body></html>");
 static const QString SCROLL_SCRIPT = QStringLiteral("<script type=\"text/javascript\">window.onscroll = function() { synchronizer.webViewScrolled(); }; </script>");
+static const QString WEBCHANNEL_SCRIPT = QStringLiteral("<script src=\"qrc:/qtwebchannel/qwebchannel.js\"></script><script>var synchronizer = 0;new QWebChannel(qt.webChannelTransport, function(channel) {     synchronizer = channel.objects.synchronizer;});</script>");
 static const QString MERMAID_CSS   = QStringLiteral("<link rel=\"stylesheet\" href=\"qrc:/scripts/mermaid/mermaid.css\">");
-static const QString MERMAID_JS    = QStringLiteral("<script src=\"qrc:/scripts/mermaid/mermaid.full.min.js\"></script>");
+static const QString MERMAID_JS    = QStringLiteral("<script src=\"qrc:/scripts/mermaid/mermaid.tiny.js\"></script>");
+static const QString MERMAID_INIT_SCRIPT = QStringLiteral("<script>\n"
+                                                          "mermaid.initialize({ startOnLoad: false, theme: 'default' });\n"
+                                                          "function _runMermaid() { mermaid.run({ querySelector: '.mermaid' }); }\n"
+                                                          "if (document.readyState === 'loading') {\n"
+                                                          "    document.addEventListener('DOMContentLoaded', _runMermaid);\n"
+                                                          "} else {\n"
+                                                          "    setTimeout(_runMermaid, 0);\n"
+                                                          "}\n"
+                                                          "</script>");
 static const QString HIGHLIGHT_JS  = QStringLiteral("<link rel=\"stylesheet\" href=\"qrc:/scripts/highlight.js/styles/.css\">\n<script src=\"qrc:/scripts/highlight.js/highlight.pack.js\"></script>\n<script>hljs.initHighlightingOnLoad();</script>");
 
 void HtmlTemplateTest::rendersContentInsideBodyTags()
 {
     HtmlTemplate htmlTemplate(HTML_TEMPLATE);
 
-    QString html = htmlTemplate.render("<p>TEST</p>", 0);
+    QString html = htmlTemplate.render("<p>TEST</p>", {});
 
-    const QString expected = QStringLiteral("<html><head>%1\n</head><body><p>TEST</p></body></html>")
-        .arg(SCROLL_SCRIPT);
+    const QString expected = QStringLiteral("<html><head>%1%2\n</head><body><p>TEST</p></body></html>")
+        .arg(WEBCHANNEL_SCRIPT).arg(SCROLL_SCRIPT);
     QCOMPARE(html, expected);
 }
 
@@ -44,8 +54,8 @@ void HtmlTemplateTest::rendersMermaidGraphInsideCodeTags()
 
     QString html = htmlTemplate.render("<pre><code class=\"mermaid\">TEST</code></pre>", HtmlTemplate::DiagramSupport);
 
-    const QString expected = QStringLiteral("<html><head>%1\n%2\n%3\n</head><body><pre><code class=\"mermaid\">TEST</code></pre></body></html>")
-        .arg(SCROLL_SCRIPT).arg(MERMAID_CSS).arg(MERMAID_JS);
+    const QString expected = QStringLiteral("<html><head>%1%2\n%3\n%4\n</head><body><div class=\"mermaid\">\nTEST</div></body></html>")
+        .arg(WEBCHANNEL_SCRIPT).arg(SCROLL_SCRIPT).arg(MERMAID_JS).arg(MERMAID_INIT_SCRIPT);
     QCOMPARE(html, expected);
 }
 

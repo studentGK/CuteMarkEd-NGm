@@ -20,10 +20,10 @@
 #include <Qt>
 #include <QList>
 #include <QString>
+#include <QStringList>
 
 class QChar;
 class QPlainTextEdit;
-class QStringList;
 
 class MarkdownManipulator
 {

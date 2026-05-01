@@ -38,6 +38,9 @@ ExportHtmlDialog::ExportHtmlDialog(const QString &fileName, QWidget *parent) :
 
     // initialize Ok button state
     exportToTextChanged(fileName);
+
+    connect(ui->chooseFileButton, &QPushButton::clicked, this, &ExportHtmlDialog::chooseFileButtonClicked);
+    connect(ui->exportToLineEdit, &QLineEdit::textChanged, this, &ExportHtmlDialog::exportToTextChanged);
 }
 
 ExportHtmlDialog::~ExportHtmlDialog()

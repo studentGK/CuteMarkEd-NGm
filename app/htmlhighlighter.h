@@ -18,6 +18,7 @@
 #define HTMLHIGHLIGHTER_H
 
 #include <QSyntaxHighlighter>
+#include <QRegularExpression>
 
 class HtmlHighlighter : public QSyntaxHighlighter
 {

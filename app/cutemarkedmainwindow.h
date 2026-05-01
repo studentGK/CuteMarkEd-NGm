@@ -125,6 +125,7 @@ private slots:
     void onNavigationWidgetPositionClicked(int position);
 
 private:
+    void setupConnections();
     void setupUi();
     void setupActions();
     void setActionsIcons();

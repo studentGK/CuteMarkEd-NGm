@@ -104,7 +104,7 @@ void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
     QPalette palette = lineNumberArea->palette();
     palette.setCurrentColorGroup(QPalette::Active);
 
-    painter.fillRect(event->rect(), palette.color(QPalette::Background));
+    painter.fillRect(event->rect(), palette.color(QPalette::Window));
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
@@ -435,7 +435,7 @@ void MarkdownEditor::loadGithubEditorStyle() {
 
     format = QTextCharFormat();
     format.setForeground(QColor("#ccc"));
-    highlighter->setTextFormat(MarkdownHighlighter::HighlighterState::HorizontalRuler, format);
+    highlighter->setTextFormat(MarkdownHighlighter::HighlighterState::HorizontalRule, format);
 
     format = QTextCharFormat();
     format.setForeground(QColor("#4183C4"));
@@ -527,7 +527,7 @@ void MarkdownEditor::loadNormalEditorStyle() {
     format = QTextCharFormat();
     format.setForeground(Qt::darkGray);
     format.setBackground(Qt::lightGray);
-    highlighter->setTextFormat(MarkdownHighlighter::HighlighterState::HorizontalRuler, format);
+    highlighter->setTextFormat(MarkdownHighlighter::HighlighterState::HorizontalRule, format);
 
     format = QTextCharFormat();
     format.setForeground(QColor(163, 0, 123));
@@ -824,7 +824,7 @@ QStringList MarkdownEditor::extractDistinctWordsFromDocument() const
 
 QStringList MarkdownEditor::retrieveAllWordsFromDocument() const
 {
-    return toPlainText().split(QRegularExpression("\\W+"), QString::SkipEmptyParts);
+    return toPlainText().split(QRegularExpression("\\W+"), Qt::SkipEmptyParts);
 }
 
 template <class UnaryPredicate>

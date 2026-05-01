@@ -19,6 +19,7 @@
 
 #include <QMenu>
 #include <QPlainTextEdit>
+#include <QRegularExpression>
 
 FindReplaceWidget::FindReplaceWidget(QWidget *parent) :
     QWidget(parent),
@@ -32,6 +33,12 @@ FindReplaceWidget::FindReplaceWidget(QWidget *parent) :
 
     setupFindOptionsMenu();
     setFocusProxy(ui->findLineEdit);
+
+    connect(ui->findNextButton, &QToolButton::clicked, this, &FindReplaceWidget::findNextClicked);
+    connect(ui->findPreviousButton, &QToolButton::clicked, this, &FindReplaceWidget::findPreviousClicked);
+    connect(ui->replaceButton, &QToolButton::clicked, this, &FindReplaceWidget::replaceClicked);
+    connect(ui->replaceAllButton, &QToolButton::clicked, this, &FindReplaceWidget::replaceAllClicked);
+    connect(ui->closeButton, &QToolButton::clicked, this, &FindReplaceWidget::hide);
 }
 
 FindReplaceWidget::~FindReplaceWidget()
@@ -176,7 +183,7 @@ bool FindReplaceWidget::find(const QString &searchString, QTextDocument::FindFla
 
 bool FindReplaceWidget::findUsingRegExp(const QString &pattern, QTextDocument::FindFlags findOptions) const
 {
-    QRegularExpression rx(pattern, findCaseSensitively ? Qt::CaseSensitive : Qt::CaseInsensitive);
+    QRegularExpression rx(pattern, findCaseSensitively ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
 
     QTextCursor search = textEditor->document()->find(rx, textEditor->textCursor(), findOptions);
     if (search.isNull())

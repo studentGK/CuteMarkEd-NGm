@@ -4,19 +4,19 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- *
+ * 
  *     (1) Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
+ *     notice, this list of conditions and the following disclaimer. 
+ * 
  *     (2) Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
- *     distribution.
- *
+ *     distribution.  
+ *     
  *     (3) The name of the author may not be used to
  *     endorse or promote products derived from this software without
  *     specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -38,7 +38,7 @@ class HtmlTemplate : public Template
 {
 public:
     HtmlTemplate();
-    explicit HtmlTemplate(const QString &templateString);
+	explicit HtmlTemplate(const QString &templateString);
 
     virtual QString render(const QString &body, RenderOptions options) const;
     virtual QString exportAsHtml(const QString &header, const QString &body, RenderOptions options) const;
@@ -50,11 +50,6 @@ private:
     void convertWavedromCodeSectionToScript(QString &body) const;
 
     QString htmlTemplate;
-
-    // Cached inline content for scripts that cannot be loaded via qrc:// in Qt6.
-    // mermaid v10+ uses .bin alias to prevent Qt rcc from V4-precompiling ESNext.
-    QString mermaidJsInline;
-    QString highlightJsInline;
 };
 
 #endif // HTMLTEMPLATE_H

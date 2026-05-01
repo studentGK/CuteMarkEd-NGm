@@ -18,6 +18,7 @@
 #define LANGUAGEMENU_H
 
 #include <QMenu>
+#include <QActionGroup>
 
 class Dictionary;
 

@@ -132,24 +132,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>chooseFileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>ImageToolDialog</receiver>
-   <slot>chooseFileButtonClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>350</x>
-     <y>26</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>266</x>
-     <y>2</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <slots>
-  <slot>chooseFileButtonClicked()</slot>
- </slots>
+  </connections>
 </ui>

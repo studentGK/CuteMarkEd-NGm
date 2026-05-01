@@ -20,3 +20,6 @@ SUBDIRS = \
 #libs.depends = 3rdparty
 app.depends = libs app-static
 test.depends = libs app-static
+
+
+QMAKE_CXX="clazy-cl.bat"

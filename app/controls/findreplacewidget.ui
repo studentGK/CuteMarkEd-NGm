@@ -201,38 +201,6 @@
  </resources>
  <connections>
   <connection>
-   <sender>findNextButton</sender>
-   <signal>clicked()</signal>
-   <receiver>FindReplaceWidget</receiver>
-   <slot>findNextClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>427</x>
-     <y>32</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>253</x>
-     <y>34</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>findPreviousButton</sender>
-   <signal>clicked()</signal>
-   <receiver>FindReplaceWidget</receiver>
-   <slot>findPreviousClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>396</x>
-     <y>19</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>253</x>
-     <y>34</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>closeButton</sender>
    <signal>clicked()</signal>
    <receiver>FindReplaceWidget</receiver>
@@ -241,38 +209,6 @@
     <hint type="sourcelabel">
      <x>659</x>
      <y>23</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>339</x>
-     <y>39</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>replaceButton</sender>
-   <signal>clicked()</signal>
-   <receiver>FindReplaceWidget</receiver>
-   <slot>replaceClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>429</x>
-     <y>63</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>339</x>
-     <y>39</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>replaceAllButton</sender>
-   <signal>clicked()</signal>
-   <receiver>FindReplaceWidget</receiver>
-   <slot>replaceAllClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>497</x>
-     <y>63</y>
     </hint>
     <hint type="destinationlabel">
      <x>339</x>

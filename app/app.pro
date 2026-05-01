@@ -4,11 +4,11 @@
 #
 #-------------------------------------------------
 
-QT       += core gui webenginewidgets printsupport
+QT       += core gui webenginewidgets printsupport core5compat
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-win32: QT += winextras
+# win32: QT += winextras
 
 TARGET = cutemarked
 TEMPLATE = app
@@ -17,6 +17,8 @@ CONFIG += c++14
 unix:!macx {
   CONFIG += link_pkgconfig
 }
+
+QTQUICK_COMPILER_SKIPPED_RESOURCES += resources.qrc
 
 TRANSLATIONS += \
     translations/cutemarked_cs.ts \

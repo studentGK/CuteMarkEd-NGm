@@ -17,6 +17,7 @@
 #include "options.h"
 
 #include <QWebEngineSettings>
+#include <QWebEngineProfile>
 #include <QDir>
 
 static const QString MARKDOWN_CONVERTER = QStringLiteral("General/converter");
@@ -96,7 +97,7 @@ Options::Options(QObject *parent) :
 
 void Options::apply()
 {
-    QWebEngineSettings *globalWebSettings = QWebEngineSettings::globalSettings();
+    QWebEngineSettings *globalWebSettings = QWebEngineProfile::defaultProfile()->settings();
     globalWebSettings->setFontFamily(QWebEngineSettings::StandardFont, m_standardFontFamily);
     globalWebSettings->setFontFamily(QWebEngineSettings::FixedFont, m_fixedFontFamily);
     globalWebSettings->setFontFamily(QWebEngineSettings::SerifFont, m_serifFontFamily);
@@ -543,6 +544,7 @@ void Options::readSettings()
     // editor settings
     QString fontFamily = settings.value(FONT_FAMILY, FONT_FAMILY_DEFAULT).toString();
     int fontSize = settings.value(FONT_SIZE, 10).toInt();
+    if (fontSize <= 0) fontSize = 10;  // guard against corrupt/legacy settings
 
     m_tabWidth = settings.value(TAB_WIDTH, 8).toInt();
     m_lineColumnEnabled = settings.value(LINECOLUMN_ENABLED, false).toBool();
@@ -554,7 +556,7 @@ void Options::readSettings()
     setEditorFont(f);
 
     // html preview settings
-    QWebEngineSettings *globalWebSettings = QWebEngineSettings::globalSettings();
+    QWebEngineSettings *globalWebSettings = QWebEngineProfile::defaultProfile()->settings();
     m_standardFontFamily = settings.value(PREVIEW_STANDARD_FONT, globalWebSettings->fontFamily(QWebEngineSettings::StandardFont)).toString();
     m_fixedFontFamily = settings.value(PREVIEW_FIXED_FONT, globalWebSettings->fontFamily(QWebEngineSettings::FixedFont)).toString();
     m_serifFontFamily = settings.value(PREVIEW_SERIF_FONT, globalWebSettings->fontFamily(QWebEngineSettings::SerifFont)).toString();

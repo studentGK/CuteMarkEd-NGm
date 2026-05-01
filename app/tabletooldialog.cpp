@@ -38,6 +38,8 @@ TableToolDialog::TableToolDialog(QWidget *parent) :
     previousColumnCount(0)
 {
     ui->setupUi(this);
+    connect(ui->rowsSpinBox, &QSpinBox::valueChanged, this, &TableToolDialog::tableSizeChanged);
+    connect(ui->columnsSpinBox, &QSpinBox::valueChanged, this, &TableToolDialog::tableSizeChanged);
     tableSizeChanged();
 }
 

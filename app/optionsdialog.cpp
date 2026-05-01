@@ -18,10 +18,19 @@
 #include "ui_optionsdialog.h"
 
 #include <QFontComboBox>
+#include <QFontDatabase>
+#include <QHeaderView>
 #include <QItemEditorFactory>
+#include <QItemSelection>
+#include <QItemSelectionModel>
 #include <QKeySequence>
 #include <QKeySequenceEdit>
+#include <QLineEdit>
 #include <QMessageBox>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSignalBlocker>
 #include <QStyledItemDelegate>
 #include <QTableWidgetItem>
 #include <QAction>
@@ -35,7 +44,7 @@
 class KeySequenceTableItem : public QTableWidgetItem
 {
 public:
-    KeySequenceTableItem (const QKeySequence &keySequence) : 
+    KeySequenceTableItem(const QKeySequence &keySequence) :
         QTableWidgetItem(QTableWidgetItem::UserType + 1),
         m_keySequence(keySequence)
     {
@@ -57,7 +66,6 @@ public:
     {
         if (role == Qt::EditRole)
             m_keySequence = data.value<QKeySequence>();
-
         QTableWidgetItem::setData(role, data);
     }
 
@@ -93,26 +101,29 @@ OptionsDialog::OptionsDialog(Options *opt, SnippetCollection *collection, const 
     ui->tabWidget->setTabIcon(0, QIcon(QStringLiteral("fa-cog.fontawesome")));
     ui->tabWidget->setTabIcon(1, QIcon(QStringLiteral("fa-file-text-o.fontawesome")));
     ui->tabWidget->setTabIcon(2, QIcon(QStringLiteral("fa-html5.fontawesome")));
-    ui->tabWidget->setTabIcon(3, QIcon(QStringLiteral("fa-globe.fontawesome")));
+    ui->tabWidget->setTabIcon(3, QIcon(QStringLiteral("fa-eye.fontawesome")));
     ui->tabWidget->setTabIcon(4, QIcon(QStringLiteral("fa-puzzle-piece.fontawesome")));
-    ui->tabWidget->setTabIcon(5, QIcon(QStringLiteral("fa-keyboard-o.fontawesome")));
+    ui->tabWidget->setTabIcon(5, QIcon(QStringLiteral("fa-globe.fontawesome")));
+    ui->tabWidget->setTabIcon(7, QIcon(QStringLiteral("fa-keyboard-o.fontawesome")));
 
     const auto sizes = QFontDatabase::standardSizes();
     for (int size : sizes) {
-        ui->sizeComboBox->addItem(QString().setNum(size));
         ui->defaultSizeComboBox->addItem(QString().setNum(size));
         ui->defaultFixedSizeComboBox->addItem(QString().setNum(size));
     }
 
-    ui->portLineEdit->setValidator(new QIntValidator(0, 65535));
-    ui->passwordLineEdit->setEchoMode(QLineEdit::Password);
-
-    ui->snippetTableView->setModel(new SnippetsTableModel(snippetCollection, ui->snippetTableView));
-    connect(ui->snippetTableView->selectionModel(), &QItemSelectionModel::currentChanged,
+    ui->snippetListView->setModel(new SnippetsTableModel(snippetCollection, ui->snippetListView));
+    connect(ui->snippetListView->selectionModel(), &QItemSelectionModel::currentChanged,
             this, &OptionsDialog::currentSnippetChanged);
-    connect(ui->snippetTextEdit, &QPlainTextEdit::textChanged, this, &OptionsDialog::snippetTextChanged);
+    connect(ui->snippetContentPlainTextEdit, &QPlainTextEdit::textChanged, this, &OptionsDialog::snippetTextChanged);
+    connect(ui->snippetTriggerLineEdit, &QLineEdit::editingFinished, this, &OptionsDialog::snippetTriggerEditingFinished);
 
     setupShortcutsTable();
+
+    connect(ui->manualProxyRadioButton, &QRadioButton::toggled, this, &OptionsDialog::manualProxyRadioButtonToggled);
+    connect(ui->addSnippetButton, &QPushButton::clicked, this, &OptionsDialog::addSnippetButtonClicked);
+    connect(ui->removeSnippetButton, &QPushButton::clicked, this, &OptionsDialog::removeSnippetButtonClicked);
+    connect(ui->pathBrowseButton, &QPushButton::clicked, this, &OptionsDialog::onPathBrowserButtonClicked);
 
     // read configuration state
     readState();
@@ -135,21 +146,38 @@ void OptionsDialog::done(int result)
 
 void OptionsDialog::manualProxyRadioButtonToggled(bool checked)
 {
-    ui->hostLineEdit->setEnabled(checked);
-    ui->portLineEdit->setEnabled(checked);
-    ui->userNameLineEdit->setEnabled(checked);
-    ui->passwordLineEdit->setEnabled(checked);
+    ui->proxyHostNameLabel->setEnabled(checked);
+    ui->proxyHostNameLineEdit->setEnabled(checked);
+    ui->proxyPortLabel->setEnabled(checked);
+    ui->proxyPortSpinBox->setEnabled(checked);
+    ui->proxyUserNameLabel->setEnabled(checked);
+    ui->proxyUserNameLineEdit->setEnabled(checked);
+    ui->proxyPasswordLabel->setEnabled(checked);
+    ui->proxyPasswordLineEdit->setEnabled(checked);
 }
 
 void OptionsDialog::currentSnippetChanged(const QModelIndex &current, const QModelIndex &)
 {
+    if (!current.isValid()) {
+        ui->snippetGroupBox->setEnabled(false);
+        ui->snippetTriggerLineEdit->clear();
+        ui->snippetContentPlainTextEdit->clear();
+        ui->removeSnippetButton->setEnabled(false);
+        return;
+    }
+
     const Snippet snippet = snippetCollection->at(current.row());
+    const QSignalBlocker triggerBlocker(ui->snippetTriggerLineEdit);
+    const QSignalBlocker contentBlocker(ui->snippetContentPlainTextEdit);
 
     // update text edit for snippet content
     QString formattedSnippet(snippet.snippet);
     formattedSnippet.insert(snippet.cursorPosition, QStringLiteral("$|"));
-    ui->snippetTextEdit->setPlainText(formattedSnippet);
-    ui->snippetTextEdit->setReadOnly(snippet.builtIn);
+    ui->snippetGroupBox->setEnabled(true);
+    ui->snippetTriggerLineEdit->setText(snippet.trigger);
+    ui->snippetTriggerLineEdit->setReadOnly(snippet.builtIn);
+    ui->snippetContentPlainTextEdit->setPlainText(formattedSnippet);
+    ui->snippetContentPlainTextEdit->setReadOnly(snippet.builtIn);
 
     // disable remove button when built-in snippet is selected
     ui->removeSnippetButton->setEnabled(!snippet.builtIn);
@@ -157,11 +185,11 @@ void OptionsDialog::currentSnippetChanged(const QModelIndex &current, const QMod
 
 void OptionsDialog::snippetTextChanged()
 {
-    const QModelIndex &modelIndex = ui->snippetTableView->selectionModel()->currentIndex();
+    const QModelIndex &modelIndex = ui->snippetListView->selectionModel()->currentIndex();
     if (modelIndex.isValid()) {
         Snippet snippet = snippetCollection->at(modelIndex.row());
         if (!snippet.builtIn) {
-            snippet.snippet = ui->snippetTextEdit->toPlainText();
+            snippet.snippet = ui->snippetContentPlainTextEdit->toPlainText();
 
             // find cursor marker
             int pos = snippet.snippet.indexOf(QStringLiteral("$|"));
@@ -175,32 +203,52 @@ void OptionsDialog::snippetTextChanged()
     }
 }
 
+void OptionsDialog::snippetTriggerEditingFinished()
+{
+    const QModelIndex &modelIndex = ui->snippetListView->selectionModel()->currentIndex();
+    if (!modelIndex.isValid())
+        return;
+
+    Snippet snippet = snippetCollection->at(modelIndex.row());
+    const QString newTrigger = ui->snippetTriggerLineEdit->text();
+    if (snippet.builtIn || snippet.trigger == newTrigger)
+        return;
+
+    SnippetsTableModel *snippetModel = qobject_cast<SnippetsTableModel*>(ui->snippetListView->model());
+    if (!snippetModel->setData(modelIndex, newTrigger, Qt::EditRole)) {
+        if (ui->snippetListView->selectionModel()->currentIndex().isValid()) {
+            ui->snippetTriggerLineEdit->setText(snippet.trigger);
+        }
+    }
+}
+
 void OptionsDialog::addSnippetButtonClicked()
 {
-    SnippetsTableModel *snippetModel = qobject_cast<SnippetsTableModel*>(ui->snippetTableView->model());
+    SnippetsTableModel *snippetModel = qobject_cast<SnippetsTableModel*>(ui->snippetListView->model());
 
     const QModelIndex &index = snippetModel->createSnippet();
 
     const int row = index.row();
     QModelIndex topLeft = snippetModel->index(row, 0, QModelIndex());
-    QModelIndex bottomRight = snippetModel->index(row, 1, QModelIndex());
-    QItemSelection selection(topLeft, bottomRight);
-    ui->snippetTableView->selectionModel()->select(selection, QItemSelectionModel::SelectCurrent);
-    ui->snippetTableView->setCurrentIndex(topLeft);
-    ui->snippetTableView->scrollTo(topLeft);
+    QItemSelection selection(topLeft, topLeft);
+    ui->snippetListView->selectionModel()->select(selection, QItemSelectionModel::SelectCurrent);
+    ui->snippetListView->setCurrentIndex(topLeft);
+    ui->snippetListView->scrollTo(topLeft);
 
-    ui->snippetTableView->edit(index);
+    ui->snippetListView->edit(topLeft);
+    ui->snippetTriggerLineEdit->setFocus();
+    ui->snippetTriggerLineEdit->selectAll();
 }
 
 void OptionsDialog::removeSnippetButtonClicked()
 {
-    const QModelIndex &modelIndex = ui->snippetTableView->selectionModel()->currentIndex();
+    const QModelIndex &modelIndex = ui->snippetListView->selectionModel()->currentIndex();
     if (!modelIndex.isValid()) {
         QMessageBox::critical(0, tr("Error", "Title of error message box"), tr("No snippet selected."));
         return;
     }
 
-    SnippetsTableModel *snippetModel = qobject_cast<SnippetsTableModel*>(ui->snippetTableView->model());
+    SnippetsTableModel *snippetModel = qobject_cast<SnippetsTableModel*>(ui->snippetListView->model());
     snippetModel->removeSnippet(modelIndex);
 }
 
@@ -215,14 +263,14 @@ void OptionsDialog::validateShortcut(int row, int column)
     if (ks.isEmpty() && !newShortcut.isEmpty()) {
         // If new shortcut was invalid, restore the original
         ui->shortcutsTable->setItem(row, column,
-            new QTableWidgetItem(actions.at(row)->shortcut().toString()));
+            new KeySequenceTableItem(actions.at(row)->shortcut()));
     } else {
         // Check for conflicts.
         if (!ks.isEmpty()) {
             for (int c = 0; c < actions.size(); ++c) {
                 if (c != row && ks == QKeySequence(ui->shortcutsTable->item(c, 1)->text())) {
                     ui->shortcutsTable->setItem(row, column,
-                        new QTableWidgetItem(actions.at(row)->shortcut().toString()));
+                        new KeySequenceTableItem(actions.at(row)->shortcut()));
                     QMessageBox::information(this, tr("Conflict"),
                                              tr("This shortcut is already used for \"%1\"")
                                              .arg(actions.at(c)->text().remove(QLatin1Char('&'))));
@@ -251,14 +299,14 @@ void OptionsDialog::setupShortcutsTable()
 {
     QStyledItemDelegate *delegate = new QStyledItemDelegate(ui->shortcutsTable);
     QItemEditorFactory *factory = new QItemEditorFactory();
-    factory->registerEditor(QVariant::nameToType("QKeySequence"), new KeySequenceEditFactory());
+    factory->registerEditor(static_cast<QMetaType::Type>(QMetaType::fromName("QKeySequence").id()), new KeySequenceEditFactory());
     delegate->setItemEditorFactory(factory);
     ui->shortcutsTable->setItemDelegateForColumn(1, delegate);
 
     ui->shortcutsTable->setRowCount(actions.size());
 
     int i = 0;
-    for (const QAction *action : qAsConst(actions)) {
+    for (const QAction *action : std::as_const(actions)) {
         QTableWidgetItem *label = new QTableWidgetItem(action->text().remove('&'));
         label->setFlags(Qt::ItemIsSelectable);
         const QKeySequence &defaultKeySeq = action->property("defaultshortcut").value<QKeySequence>();
@@ -293,7 +341,7 @@ void OptionsDialog::readState()
     // editor settings
     QFont font = options->editorFont();
     ui->fontComboBox->setCurrentFont(font);
-    ui->sizeComboBox->setCurrentText(QString().setNum(font.pointSize()));
+    ui->fontSizeSpinBox->setValue(font.pointSize());
     ui->sourceSingleSizedCheckBox->setChecked(options->isSourceAtSingleSizeEnabled());
     ui->tabWidthSpinBox->setValue(options->tabWidth());
     ui->lineColumnCheckBox->setChecked(options->isLineColumnEnabled());
@@ -322,10 +370,11 @@ void OptionsDialog::readState()
         ui->manualProxyRadioButton->setChecked(true);
         break;
     }
-    ui->hostLineEdit->setText(options->proxyHost());
-    ui->portLineEdit->setText(QString::number(options->proxyPort()));
-    ui->userNameLineEdit->setText(options->proxyUser());
-    ui->passwordLineEdit->setText(options->proxyPassword());
+    ui->proxyHostNameLineEdit->setText(options->proxyHost());
+    ui->proxyPortSpinBox->setValue(options->proxyPort());
+    ui->proxyUserNameLineEdit->setText(options->proxyUser());
+    ui->proxyPasswordLineEdit->setText(options->proxyPassword());
+    manualProxyRadioButtonToggled(ui->manualProxyRadioButton->isChecked());
 
     // shortcut settings
     for (int i = 0; i < ui->shortcutsTable->rowCount(); ++i) {
@@ -344,7 +393,7 @@ void OptionsDialog::saveState()
 
     // editor settings
     QFont font = ui->fontComboBox->currentFont();
-    font.setPointSize(ui->sizeComboBox->currentText().toInt());
+    font.setPointSize(ui->fontSizeSpinBox->value());
     options->setEditorFont(font);
     options->setSourceAtSingleSizeEnabled(ui->sourceSingleSizedCheckBox->isChecked());
     options->setTabWidth(ui->tabWidthSpinBox->value());
@@ -370,17 +419,16 @@ void OptionsDialog::saveState()
     } else if (ui->manualProxyRadioButton->isChecked()) {
         options->setProxyMode(Options::ManualProxy);
     }
-    options->setProxyHost(ui->hostLineEdit->text());
-    options->setProxyPort(ui->portLineEdit->text().toInt());
-    options->setProxyUser(ui->userNameLineEdit->text());
-    options->setProxyPassword(ui->passwordLineEdit->text());
+    options->setProxyHost(ui->proxyHostNameLineEdit->text());
+    options->setProxyPort(ui->proxyPortSpinBox->value());
+    options->setProxyUser(ui->proxyUserNameLineEdit->text());
+    options->setProxyPassword(ui->proxyPasswordLineEdit->text());
 
     // shortcut settings
     for (int i = 0; i < ui->shortcutsTable->rowCount(); ++i) {
         QKeySequence customKeySeq(ui->shortcutsTable->item(i, 1)->text());
         options->addCustomShortcut(actions.at(i)->objectName(), customKeySeq);
     }
-    
+
     options->apply();
 }
-

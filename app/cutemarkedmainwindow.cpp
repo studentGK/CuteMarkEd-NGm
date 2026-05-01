@@ -28,6 +28,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QNetworkProxy>
+#include <QRegularExpression>
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QProcess>
@@ -45,8 +46,8 @@
 #include <QWebEnginePage>
 
 #ifdef Q_OS_WIN
-#include <QWinJumpList>
-#include <QWinJumpListCategory>
+// #include <QWinJumpList>
+// #include <QWinJumpListCategory>
 #endif
 
 #include <cutemarkdownhighlighter.h>
@@ -115,6 +116,7 @@ MainWindow::MainWindow(const QString &fileName, QWidget *parent) :
     channel(new QWebChannel(this))
 {
     ui->setupUi(this);
+    setupConnections();
     setupUi();
 
     setFileName(fileName);
@@ -162,6 +164,12 @@ void MainWindow::initializeApp()
     ui->webView->setPage(new MyQWebEnginePage(this, this));
     // inform us when a link in the table of contents or preview view is clicked
     // ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+
+    // Ensure viewSynchronizer is initialized before registering with QWebChannel.
+    // markdownConverterChanged() sets up viewSynchronizer based on the saved converter
+    // option; without this call it would still be nullptr here (Qt6 crashes on null).
+    markdownConverterChanged();
+
     addJavaScriptObject();
     ui->webView->page()->setWebChannel(channel);
 
@@ -222,7 +230,7 @@ void MainWindow::initializeApp()
             this, &MainWindow::onNavigationWidgetPositionClicked);
 
     // setup jump list on windows
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QWinJumpList jumplist;
     jumplist.recent()->setVisible(true);
 #endif
@@ -253,6 +261,7 @@ void MainWindow::fileNew()
         ui->plainTextEdit->resetHighlighting();
         ui->webView->setHtml(QString());
         ui->htmlSourceTextEdit->clear();
+        ui->navigationWidget->clear();
         setFileName(QString());
     }
 }
@@ -352,7 +361,6 @@ void MainWindow::fileExportToHtml()
         QFile f(dialog.fileName());
         if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&f);
-            out.setCodec("UTF-8");
             out << html;
         }
     }
@@ -367,9 +375,7 @@ void MainWindow::fileExportToPdf()
 
     ExportPdfDialog dialog(fileName);
     if (dialog.exec() == QDialog::Accepted) {
-        auto orientation = dialog.printer()->orientation() == QPrinter::Portrait ? QPageLayout::Portrait : QPageLayout::Landscape;
-        auto paperSize = (QPageSize::PageSizeId)dialog.printer()->paperSize();
-        const QPageLayout &layout = QPageLayout(QPageSize(paperSize), orientation, QMarginsF());;
+        const QPageLayout layout = dialog.printer()->pageLayout();
         const auto &filename = dialog.printer()->outputFileName();
         ui->webView->page()->printToPdf(filename, layout);
     }
@@ -382,7 +388,7 @@ void MainWindow::filePrint()
     dlg->setWindowTitle(tr("Print Document"));
 
     if (ui->webView->hasSelection())
-        dlg->addEnabledOption(QAbstractPrintDialog::PrintSelection);
+        dlg->setOptions(dlg->options() | QAbstractPrintDialog::PrintSelection);
 
     if (dlg->exec() == QDialog::Accepted)
 //        ui->webView->page()->printToPdf()
@@ -510,15 +516,15 @@ void MainWindow::viewChangeSplit()
 {
     QAction* action = qobject_cast<QAction*>(sender());
     if (action->objectName() == ui->actionSplit_1_1->objectName()) {
-        splitFactor = 0.5;
+        splitFactor = 0.5f;
     } else if (action->objectName() == ui->actionSplit_2_1->objectName()) {
-        splitFactor = 0.666;
+        splitFactor = 0.666f;
     } else if (action->objectName() == ui->actionSplit_1_2->objectName()) {
-        splitFactor = 0.333;
+        splitFactor = 0.333f;
     } else if (action->objectName() == ui->actionSplit_3_1->objectName()) {
-        splitFactor = 0.75;
+        splitFactor = 0.75f;
     } else if (action->objectName() == ui->actionSplit_1_3->objectName()) {
-        splitFactor = 0.25;
+        splitFactor = 0.25f;
     }
 
     updateSplitter();
@@ -789,19 +795,39 @@ void MainWindow::plainTextChanged()
 
 void MainWindow::htmlResultReady(const QString &html)
 {
-    // show html preview
-    QUrl baseUrl;
-    if (fileName.isEmpty()) {
-        baseUrl = QUrl::fromLocalFile(qApp->applicationDirPath());
-    } else {
-        baseUrl = QUrl::fromLocalFile(QFileInfo(fileName).absolutePath() + "/");
+    // Use qrc:// as base URL so that <script src="qrc:/..."> loads work in Qt6.
+    // Qt6 Chromium blocks qrc:// src= when the base URL is file://.
+    // Local file references (images etc.) must be pre-resolved to absolute
+    // file:// URLs in the HTML before reaching here, or left as-is for the
+    // qrc:// context (they won't resolve relatively, but inline content works).
+    // Base URL is qrc:/ so that qrc:// script/style src= loads work in Qt6.
+    // Resolve relative image/link paths to absolute file:// URLs beforehand.
+    static const QUrl qrcBase(QStringLiteral("qrc:/"));
+    QString resolvedHtml = html;
+    if (!fileName.isEmpty()) {
+        const QString dir = QFileInfo(fileName).absolutePath() + "/";
+        const QUrl fileBase = QUrl::fromLocalFile(dir);
+        // Replace src="relative" and href="relative" with absolute file:// URLs
+        static const QRegularExpression relSrc(
+            QStringLiteral("(src|href)=\"(?!https?://|qrc:|data:|#)([^\"]+)\""));
+        QRegularExpressionMatchIterator it = relSrc.globalMatch(resolvedHtml);
+        // Iterate in reverse so replacing by position doesn't shift offsets
+        QList<QRegularExpressionMatch> matches;
+        while (it.hasNext()) matches.append(it.next());
+        for (int i = matches.size() - 1; i >= 0; --i) {
+            const QRegularExpressionMatch &m = matches[i];
+            const QString replacement = m.captured(1) + QStringLiteral("=\"") +
+                                        fileBase.resolved(m.captured(2)).toString() +
+                                        QStringLiteral("\"");
+            resolvedHtml.replace(m.capturedStart(), m.capturedLength(), replacement);
+        }
     }
 
     QList<int> childSizes = ui->splitter->sizes();
-    if (previewHtml != html) {
+    if (previewHtml != resolvedHtml) {
         if (ui->webView->isVisible() && childSizes[1] != 0) {
-            previewHtml = html;
-            ui->webView->setHtml(html, baseUrl);
+            previewHtml = resolvedHtml;
+            ui->webView->setHtml(resolvedHtml, qrcBase);
         }
 
         // show html source
@@ -880,7 +906,9 @@ void MainWindow::splitterMoved(int pos, int index)
 
 void MainWindow::addJavaScriptObject()
 {
-    channel->registerObject(QStringLiteral("synchronizer"), viewSynchronizer);
+    if (viewSynchronizer) {
+        channel->registerObject(QStringLiteral("synchronizer"), viewSynchronizer);
+    }
     // add view synchronizer object to javascript engine
     //ui->webView->page()->mainFrame()->addToJavaScriptWindowObject("synchronizer", viewSynchronizer);
 }
@@ -902,6 +930,7 @@ bool MainWindow::load(const QString &fileName)
     QString text = QString::fromUtf8(content);
 
     ui->plainTextEdit->resetHighlighting();
+    ui->navigationWidget->clear();
     ui->plainTextEdit->setPlainText(text);
 
     QSettings settings;
@@ -953,8 +982,16 @@ void MainWindow::markdownConverterChanged()
 
     // disable unsupported extensions
     updateExtensionStatus();
-    if (viewSynchronizer)
+
+    // Deregister old synchronizer from channel BEFORE deleting it.
+    // Qt6 QWebChannel holds the pointer; deleting without deregistering
+    // causes a dangling reference and crash.
+    if (viewSynchronizer) {
+        channel->deregisterObject(viewSynchronizer);
         delete viewSynchronizer;
+        viewSynchronizer = nullptr;
+    }
+
     switch (options->markdownConverter()) {
     case Options::MD4CMarkdownConverter:
         viewSynchronizer = new HtmlViewSynchronizer(ui->webView, ui->plainTextEdit);
@@ -965,8 +1002,13 @@ void MainWindow::markdownConverterChanged()
         viewSynchronizer = new RevealViewSynchronizer(ui->webView, ui->plainTextEdit);
         break;
     default:
-        viewSynchronizer = 0;
+        viewSynchronizer = nullptr;
         break;
+    }
+
+    // Re-register new synchronizer so QWebChannel stays in sync.
+    if (viewSynchronizer) {
+        channel->registerObject(QStringLiteral("synchronizer"), viewSynchronizer);
     }
 }
 
@@ -987,6 +1029,13 @@ void MainWindow::setupUi()
 
     // close table of contents dockwidget
     ui->dockWidget->close();
+
+    // Re-parse navigation when the dock becomes visible so it is always
+    // up to date even when opened after switching files while hidden.
+    connect(ui->dockWidget, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+        if (visible)
+            ui->navigationWidget->parse(ui->plainTextEdit->document());
+    });
 
     // hide markdown syntax help dockwidget
     ui->dockWidget_2->hide();
@@ -1063,7 +1112,7 @@ void MainWindow::setupActions()
     // view menu
     ui->menuView->insertAction(ui->menuView->actions()[0], ui->dockWidget->toggleViewAction());
     ui->menuView->insertAction(ui->menuView->actions()[1], ui->fileExplorerDockWidget->toggleViewAction());
-    SetActionShortcut(ui->fileExplorerDockWidget->toggleViewAction(), QKeySequence(Qt::ALT + Qt::Key_E));
+    SetActionShortcut(ui->fileExplorerDockWidget->toggleViewAction(), QKeySequence(Qt::ALT | Qt::Key_E));
     SetActionShortcut(ui->actionFullScreenMode, QKeySequence::FullScreen);
 
     // extras menu
@@ -1411,8 +1460,65 @@ void MainWindow::removeStyleSheet(const QString &name, bool immediately)
     if (immediately)
         ui->webView->page()->runJavaScript(s, QWebEngineScript::ApplicationWorld);
 
-    QWebEngineScript script = ui->webView->page()->scripts().findScript(name);
-    ui->webView->page()->scripts().remove(script);
+    const QList<QWebEngineScript> scripts = ui->webView->page()->scripts().find(name);
+    for (const QWebEngineScript &script : scripts) {
+        ui->webView->page()->scripts().remove(script);
+    }
+}
+
+void MainWindow::setupConnections()
+{
+    connect(ui->actionNew, &QAction::triggered, this, &MainWindow::fileNew);
+    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::fileOpen);
+    connect(ui->actionSave, &QAction::triggered, this, &MainWindow::fileSave);
+    connect(ui->actionSaveAs, &QAction::triggered, this, &MainWindow::fileSaveAs);
+    connect(ui->actionExportToHTML, &QAction::triggered, this, &MainWindow::fileExportToHtml);
+    connect(ui->actionExportToPDF, &QAction::triggered, this, &MainWindow::fileExportToPdf);
+    connect(ui->action_Print, &QAction::triggered, this, &MainWindow::filePrint);
+    connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
+
+    connect(ui->actionUndo, &QAction::triggered, this, &MainWindow::editUndo);
+    connect(ui->actionRedo, &QAction::triggered, this, &MainWindow::editRedo);
+    connect(ui->actionCopyHtmlToClipboard, &QAction::triggered, this, &MainWindow::editCopyHtml);
+    connect(ui->actionGotoLine, &QAction::triggered, this, &MainWindow::editGotoLine);
+    connect(ui->actionFindReplace, &QAction::triggered, this, &MainWindow::editFindReplace);
+
+    connect(ui->actionStrong, &QAction::triggered, this, &MainWindow::editStrong);
+    connect(ui->actionEmphasize, &QAction::triggered, this, &MainWindow::editEmphasize);
+    connect(ui->actionStrikethrough, &QAction::triggered, this, &MainWindow::editStrikethrough);
+    connect(ui->actionInline_Code, &QAction::triggered, this, &MainWindow::editInlineCode);
+    connect(ui->actionCenterParagraph, &QAction::triggered, this, &MainWindow::editCenterParagraph);
+    connect(ui->actionHardLinebreak, &QAction::triggered, this, &MainWindow::editHardLinebreak);
+    connect(ui->actionBlockquote, &QAction::triggered, this, &MainWindow::editBlockquote);
+    connect(ui->actionIncreaseHeaderLevel, &QAction::triggered, this, &MainWindow::editIncreaseHeaderLevel);
+    connect(ui->actionDecreaseHeaderLevel, &QAction::triggered, this, &MainWindow::editDecreaseHeaderLevel);
+    connect(ui->actionInsertTable, &QAction::triggered, this, &MainWindow::editInsertTable);
+    connect(ui->actionInsertImage, &QAction::triggered, this, &MainWindow::editInsertImage);
+
+    connect(ui->actionSplit_1_1, &QAction::triggered, this, &MainWindow::viewChangeSplit);
+    connect(ui->actionSplit_2_1, &QAction::triggered, this, &MainWindow::viewChangeSplit);
+    connect(ui->actionSplit_1_2, &QAction::triggered, this, &MainWindow::viewChangeSplit);
+    connect(ui->actionSplit_3_1, &QAction::triggered, this, &MainWindow::viewChangeSplit);
+    connect(ui->actionSplit_1_3, &QAction::triggered, this, &MainWindow::viewChangeSplit);
+    connect(ui->actionFullScreenMode, &QAction::triggered, this, &MainWindow::viewFullScreenMode);
+    connect(ui->actionHorizontalLayout, &QAction::triggered, this, &MainWindow::viewHorizontalLayout);
+    connect(ui->actionHtmlSource, &QAction::triggered, this, &MainWindow::setHtmlSource);
+
+    connect(ui->actionShowSpecialCharacters, &QAction::toggled, this, &MainWindow::extrasShowSpecialCharacters);
+    connect(ui->actionWordWrap, &QAction::toggled, this, &MainWindow::extrasWordWrap);
+    connect(ui->actionYamlHeaderSupport, &QAction::toggled, this, &MainWindow::extrasYamlHeaderSupport);
+    connect(ui->actionCheckSpelling, &QAction::triggered, this, &MainWindow::extrasCheckSpelling);
+    connect(ui->actionOptions, &QAction::triggered, this, &MainWindow::extrasOptions);
+
+    connect(ui->actionAutolink, &QAction::triggered, this, &MainWindow::extensionsAutolink);
+    connect(ui->actionStrikethroughOption, &QAction::triggered, this, &MainWindow::extensionsStrikethrough);
+    connect(ui->actionUnderline, &QAction::triggered, this, &MainWindow::extensionsUnderline);
+
+    connect(ui->actionMarkdownSyntax, &QAction::triggered, this, &MainWindow::helpMarkdownSyntax);
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::helpAbout);
+
+    connect(ui->plainTextEdit, &MarkdownEditor::textChanged, this, &MainWindow::plainTextChanged);
+    connect(ui->splitter, &QSplitter::splitterMoved, this, &MainWindow::splitterMoved);
 }
 
 #include "cutemarkedmainwindow.moc"

@@ -20,6 +20,8 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QPrinter>
+#include <QPageLayout>
+#include <QPageSize>
 
 ExportPdfDialog::ExportPdfDialog(const QString &fileName, QWidget *parent) :
     QDialog(parent),
@@ -38,17 +40,20 @@ ExportPdfDialog::ExportPdfDialog(const QString &fileName, QWidget *parent) :
     }
 
     // fill paper size combobox
-    ui->paperSizeComboBox->addItem(tr("A4 (210 x 297 mm, 8.26 x 11.69 inches)"), QPrinter::A4);
-    ui->paperSizeComboBox->addItem(tr("Letter (8.5 x 11 inches, 215.9 x 279.4 mm)"), QPrinter::Letter);
-    ui->paperSizeComboBox->addItem(tr("Legal (8.5 x 14 inches, 215.9 x 355.6 mm)"), QPrinter::Legal);
-    ui->paperSizeComboBox->addItem(tr("A3 (297 x 420 mm)"), QPrinter::A3);
-    ui->paperSizeComboBox->addItem(tr("A5 (148 x 210 mm)"), QPrinter::A5);
-    ui->paperSizeComboBox->addItem(tr("A6 (105 x 148 mm)"), QPrinter::A6);
-    ui->paperSizeComboBox->addItem(tr("B4 (250 x 353 mm)"), QPrinter::B4);
-    ui->paperSizeComboBox->addItem(tr("B5 (176 x 250 mm, 6.93 x 9.84 inches)"), QPrinter::B5);
+    ui->paperSizeComboBox->addItem(tr("A4 (210 x 297 mm, 8.26 x 11.69 inches)"), QPageSize::A4);
+    ui->paperSizeComboBox->addItem(tr("Letter (8.5 x 11 inches, 215.9 x 279.4 mm)"), QPageSize::Letter);
+    ui->paperSizeComboBox->addItem(tr("Legal (8.5 x 14 inches, 215.9 x 355.6 mm)"), QPageSize::Legal);
+    ui->paperSizeComboBox->addItem(tr("A3 (297 x 420 mm)"), QPageSize::A3);
+    ui->paperSizeComboBox->addItem(tr("A5 (148 x 210 mm)"), QPageSize::A5);
+    ui->paperSizeComboBox->addItem(tr("A6 (105 x 148 mm)"), QPageSize::A6);
+    ui->paperSizeComboBox->addItem(tr("B4 (250 x 353 mm)"), QPageSize::B4);
+    ui->paperSizeComboBox->addItem(tr("B5 (176 x 250 mm, 6.93 x 9.84 inches)"), QPageSize::B5);
 
     // initialize Ok button state
     exportToTextChanged(fileName);
+
+    connect(ui->chooseFileButton, &QPushButton::clicked, this, &ExportPdfDialog::chooseFileButtonClicked);
+    connect(ui->exportToLineEdit, &QLineEdit::textChanged, this, &ExportPdfDialog::exportToTextChanged);
 }
 
 ExportPdfDialog::~ExportPdfDialog()
@@ -60,21 +65,20 @@ QPrinter *ExportPdfDialog::printer()
 {
     QString fileName = ui->exportToLineEdit->text();
 
-    QPrinter::Orientation orientation;
+    QPageLayout::Orientation orientation;
     if (ui->portraitRadioButton->isChecked()) {
-        orientation = QPrinter::Portrait;
+        orientation = QPageLayout::Portrait;
     } else {
-        orientation = QPrinter::Landscape;
+        orientation = QPageLayout::Landscape;
     }
 
     QVariant v = ui->paperSizeComboBox->itemData(ui->paperSizeComboBox->currentIndex());
-    QPrinter::PaperSize size = (QPrinter::PaperSize)v.toInt();
+    QPageSize::PageSizeId size = (QPageSize::PageSizeId)v.toInt();
 
     QPrinter *p = new QPrinter();
     p->setOutputFileName(fileName);
     p->setOutputFormat(QPrinter::PdfFormat);
-    p->setOrientation(orientation);
-    p->setPaperSize(size);
+    p->setPageLayout(QPageLayout(QPageSize(size), orientation, QMarginsF(0, 0, 0, 0)));
 
     return p;
 }

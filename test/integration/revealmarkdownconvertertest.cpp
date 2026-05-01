@@ -20,43 +20,39 @@
 
 #include <converter/revealmarkdownconverter.h>
 
-void RevealMarkdownConverterTest::initTestCase()
-{
-    converter = new RevealMarkdownConverter();
+void RevealMarkdownConverterTest::initTestCase() {
+  converter = new RevealMarkdownConverter();
 }
 
-void RevealMarkdownConverterTest::convertsEmptyStringToEmptyHtml()
-{
-    MarkdownDocument *doc = converter->createDocument(QString(), 0);
-    QString html = converter->renderAsHtml(doc);
+void RevealMarkdownConverterTest::convertsEmptyStringToEmptyHtml() {
+  MarkdownDocument *doc = converter->createDocument(QString(), {});
+  QString html = converter->renderAsHtml(doc);
 
-    QVERIFY(html.isNull());
+  QVERIFY(html.isNull());
 }
 
-void RevealMarkdownConverterTest::returnsAnyMarkdownTextUnchanged()
-{
-    MarkdownDocument *doc = converter->createDocument(QStringLiteral("This is an example"), 0);
-    QCOMPARE(converter->renderAsHtml(doc), QStringLiteral("This is an example"));
+void RevealMarkdownConverterTest::returnsAnyMarkdownTextUnchanged() {
+  MarkdownDocument *doc =
+      converter->createDocument(QStringLiteral("This is an example"), {});
+  QCOMPARE(converter->renderAsHtml(doc), QStringLiteral("This is an example"));
 
-    doc = converter->createDocument(QStringLiteral("# This is an example"), 0);
-    QCOMPARE(converter->renderAsHtml(doc), QStringLiteral("# This is an example"));
+  doc = converter->createDocument(QStringLiteral("# This is an example"), {});
+  QCOMPARE(converter->renderAsHtml(doc),
+           QStringLiteral("# This is an example"));
 
-    doc = converter->createDocument(QStringLiteral("## This is an example"), 0);
-    QCOMPARE(converter->renderAsHtml(doc), QStringLiteral("## This is an example"));
+  doc = converter->createDocument(QStringLiteral("## This is an example"), {});
+  QCOMPARE(converter->renderAsHtml(doc),
+           QStringLiteral("## This is an example"));
 }
 
-void RevealMarkdownConverterTest::preservesGermanUmlautsInHtml()
-{
-    QString markdown = QStringLiteral("äöüß");
+void RevealMarkdownConverterTest::preservesGermanUmlautsInHtml() {
+  QString markdown = QStringLiteral("äöüß");
 
-    MarkdownDocument *doc = converter->createDocument(markdown, 0);
-    QString html = converter->renderAsHtml(doc);
+  MarkdownDocument *doc = converter->createDocument(markdown, {});
+  QString html = converter->renderAsHtml(doc);
 
-    QVERIFY(!html.isEmpty());
-    QCOMPARE(html, QStringLiteral("äöüß"));
+  QVERIFY(!html.isEmpty());
+  QCOMPARE(html, QStringLiteral("äöüß"));
 }
 
-void RevealMarkdownConverterTest::cleanupTestCase()
-{
-    delete converter;
-}
+void RevealMarkdownConverterTest::cleanupTestCase() { delete converter; }

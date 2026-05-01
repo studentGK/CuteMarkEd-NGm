@@ -19,10 +19,11 @@
 
 #include <QtCore/qmap.h>
 #include <QtCore/qstring.h>
+#include <qtextcodec.h>
 
 class Dictionary;
 class Hunspell;
-class QTextCodec;
+// class QTextCodec;
 
 namespace hunspell {
 

@@ -102,7 +102,7 @@ void MD4CMarkdownConverterTest::benchmark()
 {
     QFETCH(QString, text);
     QBENCHMARK {
-        MarkdownDocument *doc = converter->createDocument(text, 0);
+        MarkdownDocument *doc = converter->createDocument(text, {});
         QString html = converter->renderAsHtml(doc);
     }
 }
@@ -119,6 +119,6 @@ bool MD4CMarkdownConverterTest::isIdAnchorDisabled(const QString &html)
     
 QString MD4CMarkdownConverterTest::transformMarkdownToHtml(const QString &text)
 {
-    MarkdownDocument *doc = converter->createDocument(text, 0);
+    MarkdownDocument *doc = converter->createDocument(text, {});
     return converter->renderAsHtml(doc);
 }

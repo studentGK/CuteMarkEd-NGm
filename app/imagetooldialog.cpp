@@ -25,6 +25,7 @@ ImageToolDialog::ImageToolDialog(QWidget *parent) :
     ui(new Ui::ImageToolDialog)
 {
     ui->setupUi(this);
+    connect(ui->chooseFileButton, &QPushButton::clicked, this, &ImageToolDialog::chooseFileButtonClicked);
 }
 
 ImageToolDialog::~ImageToolDialog()

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>480</height>
+    <width>612</width>
+    <height>372</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -47,13 +47,6 @@
        <item row="1" column="1">
         <widget class="QComboBox" name="iconThemeComboBox"/>
        </item>
-       <item row="2" column="1">
-        <widget class="QCheckBox" name="useCurrentFilePathCheckbox">
-         <property name="text">
-          <string>Use current file path as default</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_2">
@@ -72,17 +65,7 @@
         <widget class="QFontComboBox" name="fontComboBox"/>
        </item>
        <item row="0" column="3">
-        <widget class="QSpinBox" name="fontSizeSpinBox">
-         <property name="minimum">
-          <number>6</number>
-         </property>
-         <property name="maximum">
-          <number>72</number>
-         </property>
-         <property name="value">
-          <number>10</number>
-         </property>
-        </widget>
+        <widget class="QSpinBox" name="fontSizeSpinBox"/>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_4">
@@ -111,28 +94,14 @@
          </property>
         </spacer>
        </item>
-       <item row="2" column="0" colspan="4">
-        <widget class="QCheckBox" name="sourceSingleSizedCheckBox">
-         <property name="text">
-          <string>Use single size for source editor</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="4">
-        <widget class="QCheckBox" name="lineColumnCheckBox">
-         <property name="text">
-          <string>Show line and column number</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="2">
+       <item row="2" column="0" colspan="2">
         <widget class="QCheckBox" name="rulerEnableCheckBox">
          <property name="text">
           <string>Show column margin:</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="2">
+       <item row="2" column="2">
         <widget class="QSpinBox" name="rulerPosSpinBox">
          <property name="enabled">
           <bool>false</bool>
@@ -151,7 +120,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="3">
+       <item row="2" column="3">
         <spacer name="horizontalSpacer_3">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -164,7 +133,7 @@
          </property>
         </spacer>
        </item>
-       <item row="5" column="0" colspan="4">
+       <item row="3" column="0" colspan="4">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -206,86 +175,6 @@
        </item>
        <item row="1" column="1">
         <widget class="QComboBox" name="mathEngineComboBox"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_7">
-      <attribute name="title">
-       <string>HTML Preview</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QLabel" name="previewStandardFontLabel">
-         <property name="text">
-          <string>Standard font:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QFontComboBox" name="standardFontComboBox"/>
-       </item>
-       <item row="0" column="2">
-        <widget class="QComboBox" name="defaultSizeComboBox"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="previewSerifFontLabel">
-         <property name="text">
-          <string>Serif font:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1" colspan="2">
-        <widget class="QFontComboBox" name="serifFontComboBox"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="previewSansSerifFontLabel">
-         <property name="text">
-          <string>Sans-serif font:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1" colspan="2">
-        <widget class="QFontComboBox" name="sansSerifFontComboBox"/>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="previewFixedFontLabel">
-         <property name="text">
-          <string>Fixed font:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QFontComboBox" name="fixedFontComboBox"/>
-       </item>
-       <item row="3" column="2">
-        <widget class="QComboBox" name="defaultFixedSizeComboBox"/>
-       </item>
-       <item row="4" column="0" colspan="3">
-        <widget class="QCheckBox" name="mathSupportCheckBox">
-         <property name="text">
-          <string>Enable math support</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="3">
-        <widget class="QCheckBox" name="mathInlineCheckBox">
-         <property name="text">
-          <string>Enable inline math</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0" colspan="3">
-        <spacer name="verticalSpacer_preview">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
@@ -455,43 +344,6 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="proxyUserNameLabel">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>User Name:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLineEdit" name="proxyUserNameLineEdit">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="proxyPasswordLabel">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Password:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLineEdit" name="proxyPasswordLineEdit">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="echoMode">
-               <enum>QLineEdit::Password</enum>
-              </property>
-             </widget>
-            </item>
            </layout>
           </item>
          </layout>
@@ -554,41 +406,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_8">
-      <attribute name="title">
-       <string>Shortcuts</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_shortcuts">
-       <item>
-        <widget class="QTableWidget" name="shortcutsTable">
-         <property name="editTriggers">
-          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <column>
-          <property name="text">
-           <string>Action</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Shortcut</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Default</string>
-          </property>
-         </column>
-        </widget>
        </item>
       </layout>
      </widget>

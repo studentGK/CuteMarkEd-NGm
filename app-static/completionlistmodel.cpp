@@ -18,6 +18,7 @@
 
 #include <QFont>
 #include <QIcon>
+#include <algorithm>
 
 
 CompletionListModel::CompletionListModel(QObject *parent) :
@@ -86,7 +87,7 @@ void CompletionListModel::snippetCollectionChanged(SnippetCollection::Collection
     switch (changedType) {
     case SnippetCollection::ItemAdded:
         {
-            QList<Snippet>::iterator it = qLowerBound(snippets.begin(), snippets.end(), snippet);
+            auto it = std::lower_bound(snippets.begin(), snippets.end(), snippet);
             int row = std::distance(snippets.begin(), it);
             beginInsertRows(QModelIndex(), row, row);
             snippets.insert(it, snippet);

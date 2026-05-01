@@ -41,14 +41,11 @@ private slots:
     void manualProxyRadioButtonToggled(bool checked);
     void currentSnippetChanged(const QModelIndex &current, const QModelIndex &previous);
     void snippetTextChanged();
-    void snippetTriggerEditingFinished();
     void addSnippetButtonClicked();
     void removeSnippetButtonClicked();
-    void validateShortcut(int row, int column);
     void onPathBrowserButtonClicked();
 
 private:
-    void setupShortcutsTable();
     void readState();
     void saveState();
 

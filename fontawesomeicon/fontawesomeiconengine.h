@@ -28,6 +28,7 @@
 #define FONTAWESOMEICONENGINE_H
 
 #include <QIconEngine>
+#include <QHash>
 
 class FontAwesomeIconEngine : public QIconEngine
 {
