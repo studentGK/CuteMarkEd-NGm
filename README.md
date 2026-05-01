@@ -1,3 +1,8 @@
+## CuteMarkEd NGm
+
+Ported CuteMarkEd NG to Qt6.  
+
+
 ## CuteMarkEd NG
 
 ### HISTORY
@@ -12,14 +17,14 @@ A Qt-based, free and open source markdown editor with live HTML preview, math ex
 
 ### DOWNLOAD
 
-[Sources](https://github.com/cloose/CuteMarkEd/archive/v0.11.3.tar.gz)  
+[Sources](https://github.com/cloose/CuteMarkEd/archive/v0.11.3.tar.gz)
 
 
 ### DEPENDENCIES
 
-* [Qt 5.7](http://qt-project.org) (LGPL v2.1)
-* [mD4C](http://github.com/mity/md4c) (MIT License)
-* [QMarkdownTextedit](https://github.com/pbek/qmarkdowntextedit) (MIT License)
+* \[Qt 5.7\](http://qt-project.org) (LGPL v2.1)
+* \[mD4C\](http://github.com/mity/md4c) (MIT License)
+* \[QMarkdownTextedit\](https://github.com/pbek/qmarkdowntextedit) (MIT License)
 
 ### BUILD
 
@@ -30,8 +35,8 @@ A Qt-based, free and open source markdown editor with live HTML preview, math ex
 ##### Status
 
 | Linux | Windows |
-| ----- | ------- |
-| [![Build Status](https://travis-ci.org/cloose/CuteMarkEd.png)](https://travis-ci.org/cloose/CuteMarkEd) | [![](https://ci.appveyor.com/api/projects/status/github/cloose/CuteMarkEd)](https://ci.appveyor.com/project/cloose/cutemarked) |
+| --- | --- |
+|  |  |
 
 [![Stories in Ready](https://badge.waffle.io/cloose/CuteMarkEd.png?label=ready)](https://waffle.io/cloose/CuteMarkEd)
 

@@ -184,3 +184,4 @@ pip-log.txt
 
 # Win32 Installer
 win32installer/package
+.vscode/
